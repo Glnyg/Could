@@ -5,6 +5,8 @@ from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter
 from wxcloudrun.model import Counters
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 
+import uilt
+
 
 @app.route('/')
 def index():
@@ -64,3 +66,25 @@ def get_count():
     """
     counter = Counters.query.filter(Counters.id == 1).first()
     return make_succ_response(0) if counter is None else make_succ_response(counter.count)
+
+
+@app.route('/api/snack<card>', methods=['GET'])
+def get_snack(card: str):
+    res_json = uilt.get_snack_json(card)
+    if res_json:
+        try:
+            snack = res_json['Data']['Items'][0]
+            result = {
+                'card': snack['gtin'],
+                'name': snack['description'],
+                'keyword': snack['keyword'],
+                'img': snack['picture_filename'],
+                'grams': snack['specification'],
+                'brand': snack['brandcn'],
+                'firm_name': snack['firm_name'],
+            }
+            return make_succ_response(result)
+        except IndexError:
+            return make_err_response('构筑失败')
+    else:
+        return make_err_response('查询失败')
